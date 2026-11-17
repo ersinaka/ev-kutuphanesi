@@ -210,6 +210,11 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
               >
                 {READING_STATUS_LABELS[book.reading_status]}
               </button>
+              {book.rating && book.reading_status === "read" ? (
+                <span className="chip chip-warn">
+                  {"★".repeat(book.rating)}
+                </span>
+              ) : null}
               {book.location ? (
                 <span className="chip chip-accent">{book.location}</span>
               ) : null}
@@ -220,6 +225,9 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
                 </span>
               ) : null}
             </div>
+            {book.review && book.reading_status === "read" ? (
+              <p className="clamp-2">{book.review}</p>
+            ) : null}
 
             <div className="action-row">
               <Link href={`/kitap/${book.id}`} className="btn btn-ghost">

@@ -899,8 +899,15 @@ select.input {
   }
 }
 
+.detail-cover-wrap {
+  display: grid;
+  gap: 0;
+  justify-items: center;
+}
+
 .detail-cover {
   position: relative;
+  width: min(220px, 70vw);
   aspect-ratio: 3 / 4;
   overflow: hidden;
   border-radius: 8px 12px 12px 8px;
@@ -911,16 +918,96 @@ select.input {
     8px 16px 28px rgba(26, 31, 28, 0.16);
 }
 
-.detail-cover::after {
-  content: "";
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: -14px;
-  height: 16px;
-  border-radius: 999px;
-  background: rgba(26, 31, 28, 0.18);
-  filter: blur(4px);
+.detail-shelf {
+  width: min(260px, 80vw);
+  height: 14px;
+  margin-top: -2px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood));
+  box-shadow: 0 8px 16px rgba(26, 31, 28, 0.16);
+}
+
+.status-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.status-btn {
+  padding: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 80%, white);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 300ms var(--ease),
+    color 300ms var(--ease),
+    border-color 300ms var(--ease),
+    transform 500ms var(--ease);
+}
+
+.status-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.status-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.status-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rating-row {
+  display: flex;
+  gap: 4px;
+}
+
+.rating-star {
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: #c5b8a8;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 300ms var(--ease),
+    transform 500ms var(--ease);
+}
+
+.rating-star.is-on {
+  color: #c47b2c;
+}
+
+.rating-star:hover {
+  transform: translateY(-2px);
+}
+
+.review-quote {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--wood) 20%, var(--line));
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--accent-soft) 55%, white);
+}
+
+.review-quote p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.review-score {
+  margin-bottom: 8px !important;
+  color: #c47b2c;
+  letter-spacing: 2px;
 }
 
 .detail-description {

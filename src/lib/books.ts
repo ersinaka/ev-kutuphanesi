@@ -48,6 +48,9 @@ export async function addBook(input: BookInsert): Promise<Book> {
     isbn13: input.isbn13 || null,
     source: input.source ?? "manual",
     reading_status: input.reading_status ?? "unread",
+    review: input.review || null,
+    rating: input.rating ?? null,
+    finished_at: input.finished_at || null,
     loaned_to: input.loaned_to || null,
     loaned_at: input.loaned_at || null,
     due_at: input.due_at || null,
@@ -74,9 +77,14 @@ export async function updateBook(id: string, input: BookUpdate): Promise<Book> {
   }
   if ("isbn" in payload) payload.isbn = payload.isbn || null;
   if ("isbn13" in payload) payload.isbn13 = payload.isbn13 || null;
+  if ("review" in payload) payload.review = payload.review || null;
+  if ("finished_at" in payload) payload.finished_at = payload.finished_at || null;
   if ("loaned_to" in payload) payload.loaned_to = payload.loaned_to || null;
   if ("loaned_at" in payload) payload.loaned_at = payload.loaned_at || null;
   if ("due_at" in payload) payload.due_at = payload.due_at || null;
+  if ("rating" in payload && (payload.rating == null || Number.isNaN(payload.rating))) {
+    payload.rating = null;
+  }
 
   const { data, error } = await supabase
     .from("books")

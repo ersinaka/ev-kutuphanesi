@@ -17,6 +17,9 @@ export type Book = {
   notes: string | null;
   source: BookSource;
   reading_status: ReadingStatus;
+  review: string | null;
+  rating: number | null;
+  finished_at: string | null;
   loaned_to: string | null;
   loaned_at: string | null;
   due_at: string | null;
@@ -38,6 +41,9 @@ export type BookInsert = {
   notes?: string | null;
   source?: BookSource;
   reading_status?: ReadingStatus;
+  review?: string | null;
+  rating?: number | null;
+  finished_at?: string | null;
   loaned_to?: string | null;
   loaned_at?: string | null;
   due_at?: string | null;

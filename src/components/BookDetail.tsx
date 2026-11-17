@@ -9,6 +9,8 @@ import { READING_STATUS_LABELS } from "@/lib/types";
 import { BookCover } from "@/components/BookCover";
 import { BookEditForm } from "@/components/BookEditForm";
 import { LoanPanel } from "@/components/LoanPanel";
+import { ReadingStatusPanel } from "@/components/ReadingStatusPanel";
+import { ReviewPanel } from "@/components/ReviewPanel";
 
 type BookDetailProps = {
   initialBook: Book;
@@ -33,13 +35,17 @@ export function BookDetail({ initialBook }: BookDetailProps) {
   return (
     <div className="stack-lg">
       <div className="detail-hero">
-        <div className="detail-cover">
-          <BookCover title={book.title} coverUrl={book.cover_url} />
+        <div className="detail-cover-wrap">
+          <div className="detail-cover">
+            <BookCover title={book.title} coverUrl={book.cover_url} />
+          </div>
+          <div className="detail-shelf" aria-hidden />
         </div>
+
         <div className="stack-md">
           <div className="page-copy">
             <p className="eyebrow">
-              <Link href="/">← Kütüphane</Link>
+              <Link href="/">← Raflar</Link>
             </p>
             <h1 className="page-title">{book.title}</h1>
             <p className="page-lead">
@@ -53,6 +59,11 @@ export function BookDetail({ initialBook }: BookDetailProps) {
             <span className="chip chip-accent">
               {READING_STATUS_LABELS[book.reading_status]}
             </span>
+            {book.rating ? (
+              <span className="chip chip-warn">
+                {"★".repeat(book.rating)}
+              </span>
+            ) : null}
             {book.location ? (
               <span className="chip">{book.location}</span>
             ) : null}
@@ -67,7 +78,6 @@ export function BookDetail({ initialBook }: BookDetailProps) {
                 {book.loaned_to}
               </span>
             ) : null}
-            <span className="chip">{book.source}</span>
           </div>
 
           <dl className="meta-list">
@@ -87,6 +97,12 @@ export function BookDetail({ initialBook }: BookDetailProps) {
               <>
                 <dt>Sayfa</dt>
                 <dd>{book.page_count}</dd>
+              </>
+            ) : null}
+            {book.finished_at && book.reading_status === "read" ? (
+              <>
+                <dt>Bitti</dt>
+                <dd>{book.finished_at}</dd>
               </>
             ) : null}
             {book.loaned_at ? (
@@ -109,6 +125,14 @@ export function BookDetail({ initialBook }: BookDetailProps) {
           {book.notes ? (
             <p className="alert alert-ok">Not: {book.notes}</p>
           ) : null}
+          {book.review && book.reading_status === "read" ? (
+            <blockquote className="review-quote">
+              {book.rating ? (
+                <p className="review-score">{"★".repeat(book.rating)}</p>
+              ) : null}
+              <p>{book.review}</p>
+            </blockquote>
+          ) : null}
 
           <button
             type="button"
@@ -121,6 +145,8 @@ export function BookDetail({ initialBook }: BookDetailProps) {
         </div>
       </div>
 
+      <ReadingStatusPanel book={book} onUpdated={setBook} />
+      <ReviewPanel book={book} onUpdated={setBook} />
       <LoanPanel book={book} onUpdated={setBook} />
       <BookEditForm book={book} onUpdated={setBook} />
     </div>
