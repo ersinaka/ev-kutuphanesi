@@ -138,6 +138,26 @@ create trigger book_comments_set_updated_at
   before update on public.book_comments
   for each row execute function public.set_updated_at();
 
+-- Backfill comments for books already marked as read before this migration.
+insert into public.book_comments
+  (user_id, book_id, title, authors, cover_url, isbn, isbn13, rating, body, finished_at)
+select
+  user_id,
+  id,
+  title,
+  coalesce(authors, '{}'),
+  cover_url,
+  isbn,
+  isbn13,
+  rating,
+  left(coalesce(review, ''), 2000),
+  finished_at
+from public.books
+where user_id is not null
+  and reading_status = 'read'
+  and (coalesce(btrim(coalesce(review, '')), '') <> '' or rating is not null)
+on conflict (user_id, book_id) do nothing;
+
 create or replace function public.sync_book_comment()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
