@@ -80,9 +80,6 @@ export function ImportExportPanel({ books }: ImportExportPanelProps) {
     <section className="stack-lg">
       <div className="page-copy">
         <h1 className="page-title">Yedekle / aktar</h1>
-        <p className="page-lead">
-          Kütüphaneyi CSV veya JSON olarak dışa aktar, ya da dosyadan içe al.
-        </p>
       </div>
 
       <div className="split-panels">

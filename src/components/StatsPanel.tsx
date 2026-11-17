@@ -21,9 +21,6 @@ export function StatsPanel({ books }: StatsPanelProps) {
     <section className="stack-lg">
       <div className="page-copy">
         <h1 className="page-title">İstatistikler</h1>
-        <p className="page-lead">
-          Kütüphanenin özeti: durum, raflar, yazarlar ve ödünçler.
-        </p>
       </div>
 
       <div className="stats-grid">

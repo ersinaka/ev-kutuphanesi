@@ -42,7 +42,6 @@ export function ProfileView({
           )}
         </div>
         <div className="stack-sm">
-          <p className="eyebrow">{isOwn ? "senin profilin" : "okur profili"}</p>
           <h1 className="page-title">
             {profile.display_name || profile.username}
           </h1>

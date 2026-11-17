@@ -4,8 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Ev Kütüphanesi",
     short_name: "EvKütüphane",
-    description:
-      "Evdeki kitaplarını kaydet, ISBN ile ara, aynı kitabı tekrar alma.",
+    description: "Ev Kütüphanesi",
     start_url: "/",
     display: "standalone",
     background_color: "#f2f3f5",

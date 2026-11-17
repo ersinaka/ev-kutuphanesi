@@ -16,8 +16,7 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: "Ev Kütüphanesi",
-  description:
-    "Evdeki kitaplarını ISBN veya isimle bul, aynı kitabı tekrar alma.",
+  description: "Ev Kütüphanesi",
   applicationName: "Ev Kütüphanesi",
   appleWebApp: {
     capable: true,

@@ -20,16 +20,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <div className="auth-layout">
       <div className="page-copy">
-        <p className="eyebrow">kütüphane defteri</p>
         <h1 className="page-title">
           Kitapların
           <br />
           senin olsun
         </h1>
-        <p className="page-lead">
-          Giriş yap, kendi rafını kur; okudukların ve yorumların profilinde
-          görünsün.
-        </p>
       </div>
       <AuthForm next={next} callbackError={params.error === "callback"} />
     </div>

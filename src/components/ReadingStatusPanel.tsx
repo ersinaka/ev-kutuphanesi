@@ -89,7 +89,6 @@ export function ReadingStatusPanel({
   return (
     <section className="panel stack-md">
       <h2 className="section-title">Okuma durumu</h2>
-      <p className="muted-note">Kitabı okudun mu, okuyor musun, yoksa sırada mı?</p>
       {toggle}
       {book.finished_at && book.reading_status === "read" ? (
         <p className="muted-note">Bitirme: {book.finished_at}</p>

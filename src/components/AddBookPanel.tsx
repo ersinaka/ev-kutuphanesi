@@ -317,10 +317,6 @@ export function AddBookPanel() {
           <br />
           veya elle ekle
         </h1>
-        <p className="page-lead">
-          Open Library ve Google Books üzerinden ISBN veya isimle ara. Barkod
-          tara veya toplu ISBN yapıştır.
-        </p>
       </div>
 
       <form onSubmit={runSearch} className="panel panel-search">

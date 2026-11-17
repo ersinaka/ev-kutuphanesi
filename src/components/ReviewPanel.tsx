@@ -99,9 +99,6 @@ export function ReviewPanel({ book, onUpdated }: ReviewPanelProps) {
   return (
     <section className="panel stack-md">
       <h2 className="section-title">Okuma yorumu</h2>
-      <p className="muted-note">
-        Beğendin mi, ne hissettin? Kısa bir not bırak.
-      </p>
 
       <form onSubmit={save} className="stack-md">
         <div className="field">

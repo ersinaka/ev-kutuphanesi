@@ -65,9 +65,6 @@ export function LoanPanel({ book, onUpdated, onClose }: LoanPanelProps) {
   return (
     <section className="panel stack-md">
       <h2 className="section-title">Ödünç takibi</h2>
-      <p className="muted-note">
-        Üyelik yok: isim olarak istediğini yaz (ör. Ayşe, komşu).
-      </p>
 
       <form onSubmit={saveLoan} className="field-grid">
         <label className="field">

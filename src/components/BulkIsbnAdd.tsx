@@ -136,9 +136,6 @@ export function BulkIsbnAdd({
       <div className="section-head">
         <h2 className="section-title">Toplu ISBN ekle</h2>
       </div>
-      <p className="page-lead">
-        Birden fazla ISBN yapıştır (satır, virgül veya boşlukla).
-      </p>
 
       <form onSubmit={run} className="panel stack-md">
         <textarea
