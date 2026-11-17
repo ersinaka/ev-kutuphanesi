@@ -163,6 +163,78 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
     });
   }
 
+  function renderShelfPanel(book: Book) {
+    return (
+      <div className="shelf-book-panel" role="dialog" aria-label={book.title}>
+        <div className="shelf-panel-cover">
+          <BookCover
+            title={book.title}
+            coverUrl={book.cover_url}
+            variant={book.cover_url ? "cover" : "spine"}
+          />
+        </div>
+        <div className="stack-sm">
+          <Link href={`/kitap/${book.id}`}>
+            <h2 className="book-title">{book.title}</h2>
+          </Link>
+          <p className="book-meta">
+            {book.authors.length
+              ? book.authors.join(", ")
+              : "Yazar bilinmiyor"}
+          </p>
+
+          <div className="chip-row">
+            <button
+              type="button"
+              className="chip chip-accent chip-button"
+              disabled={pending}
+              onClick={() => cycleStatus(book)}
+            >
+              {READING_STATUS_LABELS[book.reading_status]}
+            </button>
+            {book.rating && book.reading_status === "read" ? (
+              <span className="chip chip-warn">{"★".repeat(book.rating)}</span>
+            ) : null}
+            {book.location ? (
+              <span className="chip chip-accent">{book.location}</span>
+            ) : null}
+            {book.loaned_to ? (
+              <span className={`chip ${isOverdue(book) ? "chip-warn" : ""}`}>
+                {isOverdue(book) ? "Gecikmiş · " : "Ödünç · "}
+                {book.loaned_to}
+              </span>
+            ) : null}
+          </div>
+
+          {book.review && book.reading_status === "read" ? (
+            <p className="clamp-2">{book.review}</p>
+          ) : null}
+
+          <div className="action-row">
+            <Link href={`/kitap/${book.id}`} className="btn btn-primary">
+              Kitap sayfası
+            </Link>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setActiveId(null)}
+            >
+              Kapat
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => handleDelete(book.id, book.title)}
+              className="btn btn-danger"
+            >
+              Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   function renderShelfBook(book: Book) {
     const open = activeId === book.id;
 
@@ -187,63 +259,6 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
           </span>
           <span className="shelf-book-shadow" aria-hidden />
         </button>
-
-        {open ? (
-          <div className="shelf-book-panel">
-            <div className="stack-sm">
-              <Link href={`/kitap/${book.id}`}>
-                <h2 className="book-title">{book.title}</h2>
-              </Link>
-              <p className="book-meta">
-                {book.authors.length
-                  ? book.authors.join(", ")
-                  : "Yazar bilinmiyor"}
-              </p>
-            </div>
-
-            <div className="chip-row">
-              <button
-                type="button"
-                className="chip chip-accent chip-button"
-                disabled={pending}
-                onClick={() => cycleStatus(book)}
-              >
-                {READING_STATUS_LABELS[book.reading_status]}
-              </button>
-              {book.rating && book.reading_status === "read" ? (
-                <span className="chip chip-warn">
-                  {"★".repeat(book.rating)}
-                </span>
-              ) : null}
-              {book.location ? (
-                <span className="chip chip-accent">{book.location}</span>
-              ) : null}
-              {book.loaned_to ? (
-                <span className={`chip ${isOverdue(book) ? "chip-warn" : ""}`}>
-                  {isOverdue(book) ? "Gecikmiş · " : "Ödünç · "}
-                  {book.loaned_to}
-                </span>
-              ) : null}
-            </div>
-            {book.review && book.reading_status === "read" ? (
-              <p className="clamp-2">{book.review}</p>
-            ) : null}
-
-            <div className="action-row">
-              <Link href={`/kitap/${book.id}`} className="btn btn-ghost">
-                Detay
-              </Link>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => handleDelete(book.id, book.title)}
-                className="btn btn-danger"
-              >
-                Sil
-              </button>
-            </div>
-          </div>
-        ) : null}
       </article>
     );
   }
@@ -258,15 +273,19 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
             <span className="muted-note">{items.length} kitap</span>
           </div>
         ) : null}
-        {rows.map((row, index) => (
-          <div key={`${label ?? "all"}-${index}`} className="shelf-unit">
-            <div className="shelf-back" aria-hidden />
-            <div className="shelf-row">{row.map(renderShelfBook)}</div>
-            <div className="shelf-board" aria-hidden>
-              <span className="shelf-lip" />
+        {rows.map((row, index) => {
+          const activeBook = row.find((book) => book.id === activeId) ?? null;
+          return (
+            <div key={`${label ?? "all"}-${index}`} className="shelf-unit">
+              <div className="shelf-back" aria-hidden />
+              <div className="shelf-row">{row.map(renderShelfBook)}</div>
+              <div className="shelf-board" aria-hidden>
+                <span className="shelf-lip" />
+              </div>
+              {activeBook ? renderShelfPanel(activeBook) : null}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </section>
     );
   }
