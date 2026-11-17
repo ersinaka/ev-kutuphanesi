@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import {
+  cacheBooks,
+  getBookMetadata,
+  titleMetadataKey,
+} from "@/lib/catalog/book-cache";
+import {
   cacheTtlForKey,
   getCachedResults,
   isbnCacheKey,
@@ -15,6 +20,7 @@ import {
   searchOpenLibrary,
 } from "@/lib/catalog/open-library";
 import { looksLikeIsbn, normalizeIsbn } from "@/lib/isbn";
+import { createServerSupabase } from "@/lib/supabase/server";
 import type { CatalogBook } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -51,10 +57,29 @@ export async function GET(request: Request) {
     );
   }
 
+  const supabase = await createServerSupabase();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return NextResponse.json(
+      { error: "Arama için giriş yapmalısın.", results: [] },
+      { status: 401 },
+    );
+  }
+
   try {
     if (looksLikeIsbn(q)) {
       const isbn = normalizeIsbn(q)!;
       const key = isbnCacheKey(isbn);
+
+      const bookHit = await getBookMetadata(key);
+      if (bookHit) {
+        return NextResponse.json({
+          results: [bookHit],
+          query: q,
+          mode: "isbn",
+          cache: "book",
+        });
+      }
 
       const cached = await getCachedResults(key, true);
       if (cached.results) {
@@ -94,6 +119,7 @@ export async function GET(request: Request) {
 
       if (results.length) {
         await setDbCache(key, results, cacheTtlForKey(key));
+        await cacheBooks(results);
         seedIsbnCaches(results);
       }
 
@@ -106,6 +132,16 @@ export async function GET(request: Request) {
     }
 
     const key = queryCacheKey(q);
+    const bookHit = await getBookMetadata(titleMetadataKey(q));
+    if (bookHit) {
+      return NextResponse.json({
+        results: [bookHit],
+        query: q,
+        mode: "title",
+        cache: "book",
+      });
+    }
+
     const cached = await getCachedResults(key, false);
     if (cached.results) {
       return NextResponse.json({
@@ -124,6 +160,7 @@ export async function GET(request: Request) {
     const results = mergeCatalogResults([openLibrary, google]);
     if (results.length) {
       await setDbCache(key, results, cacheTtlForKey(key));
+      await cacheBooks(results);
       seedIsbnCaches(results);
     }
 

@@ -1,15 +1,16 @@
 import { ImportExportPanel } from "@/components/ImportExportPanel";
-import { listBooks } from "@/lib/books";
+import { listMyBooks, requireUser } from "@/lib/dal";
 import type { Book } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function BackupPage() {
+  await requireUser();
   let books: Book[] = [];
   let loadError: string | null = null;
 
   try {
-    books = await listBooks();
+    books = await listMyBooks();
   } catch {
     loadError = "Yedek verisi yüklenemedi.";
   }

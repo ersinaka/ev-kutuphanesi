@@ -1,5 +1,9 @@
 import { AddBookPanel } from "@/components/AddBookPanel";
+import { requireUser } from "@/lib/dal";
 
-export default function AddBookPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AddBookPage() {
+  await requireUser();
   return <AddBookPanel />;
 }

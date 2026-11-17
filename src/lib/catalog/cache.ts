@@ -1,11 +1,11 @@
 import { preferredIsbn } from "@/lib/isbn";
-import { supabase } from "@/lib/supabase/client";
+import { createServerSupabase } from "@/lib/supabase/server";
 import type { CatalogBook } from "@/lib/types";
 
 const memory = new Map<string, { expires: number; results: CatalogBook[] }>();
 
 const ISBN_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
-const QUERY_TTL_MS = 1000 * 60 * 60 * 24; // 1 day
+const QUERY_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 function stripFlags(books: CatalogBook[]): CatalogBook[] {
   return books.map((book) => ({
@@ -52,6 +52,7 @@ export function setMemoryCache(
 }
 
 export async function getDbCache(key: string): Promise<CatalogBook[] | null> {
+  const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("catalog_cache")
     .select("results, expires_at, hit_count")
@@ -81,6 +82,7 @@ export async function setDbCache(
 ) {
   if (!results.length) return;
 
+  const supabase = await createServerSupabase();
   const payload = stripFlags(results);
   setMemoryCache(key, payload, ttlMs);
 
@@ -121,11 +123,16 @@ export async function getCachedResults(key: string, isIsbn: boolean) {
 export async function lookupLibraryAsCatalog(
   isbn: string,
 ): Promise<CatalogBook[]> {
-  const { data, error } = await supabase
+  const serverSupabase = await createServerSupabase();
+  const { data: authData } = await serverSupabase.auth.getUser();
+  if (!authData.user) return [];
+
+  const { data, error } = await serverSupabase
     .from("books")
     .select(
       "title,authors,isbn,isbn13,cover_url,publisher,published_date,page_count,description,source",
     )
+    .eq("user_id", authData.user.id)
     .or(`isbn.eq.${isbn},isbn13.eq.${isbn}`)
     .limit(5);
 

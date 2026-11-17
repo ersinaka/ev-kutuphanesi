@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { updateBook } from "@/lib/books";
 import type { Book } from "@/lib/types";
 
@@ -19,13 +19,29 @@ export function ReviewPanel({ book, onUpdated }: ReviewPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
+  const [synced, setSynced] = useState({
+    id: book.id,
+    review: book.review,
+    rating: book.rating,
+    finishedAt: book.finished_at,
+  });
+
+  if (
+    synced.id !== book.id ||
+    synced.review !== book.review ||
+    synced.rating !== book.rating ||
+    synced.finishedAt !== book.finished_at
+  ) {
+    setSynced({
+      id: book.id,
+      review: book.review,
+      rating: book.rating,
+      finishedAt: book.finished_at,
+    });
     setReview(book.review ?? "");
     setRating(book.rating ?? 0);
-    setFinishedAt(
-      book.finished_at ?? new Date().toISOString().slice(0, 10),
-    );
-  }, [book.id, book.review, book.rating, book.finished_at]);
+    setFinishedAt(book.finished_at ?? new Date().toISOString().slice(0, 10));
+  }
 
   if (book.reading_status !== "read") {
     return (

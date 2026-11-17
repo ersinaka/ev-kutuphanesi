@@ -1,9 +1,48 @@
 export type BookSource = "open_library" | "google_books" | "manual";
 
+export type Profile = {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BookComment = {
+  id: string;
+  user_id: string;
+  book_id: string;
+  title: string;
+  authors: string[];
+  cover_url: string | null;
+  isbn: string | null;
+  isbn13: string | null;
+  rating: number | null;
+  body: string;
+  finished_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PublicReadBook = {
+  id: string;
+  title: string;
+  authors: string[];
+  cover_url: string | null;
+  isbn13: string | null;
+  rating: number | null;
+  finished_at: string | null;
+  review: string | null;
+  sort_at: string | null;
+};
+
 export type ReadingStatus = "unread" | "reading" | "read";
 
 export type Book = {
   id: string;
+  user_id?: string | null;
   title: string;
   authors: string[];
   isbn: string | null;
