@@ -294,14 +294,14 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
     <section className="stack-lg">
       <div className="page-hero">
         <div className="page-copy">
-          <p className="eyebrow">Ev rafı</p>
+          <p className="eyebrow">karalama defteri</p>
           <h1 className="page-title">
-            Kitaplar
+            Evdeki
             <br />
-            rafta dizili
+            kitaplar
           </h1>
           <p className="page-lead">
-            Kapaklara dokun, durumu değiştir, aynı kitabı tekrar alma.
+            Kapaklara dokun, okudun mu işaretle, aynı kitabı tekrar alma.
           </p>
         </div>
 

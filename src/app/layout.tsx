@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Caveat, Nunito } from "next/font/google";
 import { PwaRegister } from "@/components/PwaRegister";
 import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const caveat = Caveat({
+  variable: "--font-sketch",
+  subsets: ["latin"],
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
@@ -29,17 +34,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1f4d3a",
+  themeColor: "#2f6f6a",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="tr" className={`${manrope.variable} h-full antialiased`}>
+    <html
+      lang="tr"
+      className={`${caveat.variable} ${nunito.variable} h-full antialiased`}
+    >
       <body>
         <div className="app-shell">
           <div className="room-glow" aria-hidden />
+          <div className="sketch-doodles" aria-hidden />
           <SiteNav />
           <main className="app-main">{children}</main>
         </div>

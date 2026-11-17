@@ -1,10 +1,10 @@
 const TONES = [
-  { bg: "#1f4d3a", fg: "#e8f2ec" },
-  { bg: "#243447", fg: "#e6eef7" },
-  { bg: "#4a3428", fg: "#f3ebe3" },
-  { bg: "#3a2f4a", fg: "#efe8f7" },
-  { bg: "#5a2f2f", fg: "#f7eaea" },
-  { bg: "#2f4550", fg: "#e6f0f4" },
+  { bg: "#2f6f6a", fg: "#f2fffc" },
+  { bg: "#d4553a", fg: "#fff5f1" },
+  { bg: "#3d6eb5", fg: "#f0f6ff" },
+  { bg: "#c49a1a", fg: "#fff9e8" },
+  { bg: "#5a8f4a", fg: "#f3fff0" },
+  { bg: "#8b4f8f", fg: "#fdf5ff" },
 ] as const;
 
 export function coverTone(seed: string) {
