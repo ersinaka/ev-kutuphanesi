@@ -1,3 +1,4 @@
+import { fetchJson } from "@/lib/catalog/fetch-json";
 import { isbn10To13, normalizeIsbn } from "@/lib/isbn";
 import type { CatalogBook } from "@/lib/types";
 
@@ -17,7 +18,9 @@ type GoogleVolume = {
   };
 };
 
-function pickIsbns(identifiers: { type: string; identifier: string }[] | undefined) {
+function pickIsbns(
+  identifiers: { type: string; identifier: string }[] | undefined,
+) {
   let isbn: string | null = null;
   let isbn13: string | null = null;
 
@@ -37,21 +40,22 @@ function upgradeCover(url?: string) {
   return url.replace("http://", "https://").replace("&edge=curl", "");
 }
 
-export async function searchGoogleBooks(query: string): Promise<CatalogBook[]> {
+function googleBooksUrl(query: string) {
   const url = new URL("https://www.googleapis.com/books/v1/volumes");
   url.searchParams.set("q", query);
   url.searchParams.set("maxResults", "8");
   url.searchParams.set("printType", "books");
 
-  const response = await fetch(url.toString(), {
-    next: { revalidate: 0 },
-  });
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY?.trim();
+  if (apiKey) {
+    url.searchParams.set("key", apiKey);
+  }
 
-  if (!response.ok) return [];
+  return url.toString();
+}
 
-  const data = (await response.json()) as { items?: GoogleVolume[] };
-
-  return (data.items ?? [])
+function mapVolumes(items: GoogleVolume[] | undefined): CatalogBook[] {
+  return (items ?? [])
     .map((item) => item.volumeInfo)
     .filter((info): info is NonNullable<GoogleVolume["volumeInfo"]> =>
       Boolean(info?.title),
@@ -63,7 +67,9 @@ export async function searchGoogleBooks(query: string): Promise<CatalogBook[]> {
         authors: info.authors ?? [],
         isbn,
         isbn13,
-        cover_url: upgradeCover(info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail),
+        cover_url: upgradeCover(
+          info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail,
+        ),
         publisher: info.publisher ?? null,
         published_date: info.publishedDate ?? null,
         page_count: info.pageCount ?? null,
@@ -71,4 +77,14 @@ export async function searchGoogleBooks(query: string): Promise<CatalogBook[]> {
         source: "google_books" as const,
       };
     });
+}
+
+export async function searchGoogleBooks(query: string): Promise<CatalogBook[]> {
+  const data = await fetchJson<{ items?: GoogleVolume[]; error?: unknown }>(
+    googleBooksUrl(query),
+    { timeoutMs: 10000, revalidate: false },
+  );
+
+  if (!data || data.error) return [];
+  return mapVolumes(data.items);
 }

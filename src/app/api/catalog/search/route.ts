@@ -6,6 +6,30 @@ import {
   searchOpenLibrary,
 } from "@/lib/catalog/open-library";
 import { looksLikeIsbn, normalizeIsbn } from "@/lib/isbn";
+import type { CatalogBook } from "@/lib/types";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function settledList(
+  promise: Promise<CatalogBook[]>,
+): Promise<CatalogBook[]> {
+  try {
+    return await promise;
+  } catch {
+    return [];
+  }
+}
+
+async function settledOne(
+  promise: Promise<CatalogBook | null>,
+): Promise<CatalogBook | null> {
+  try {
+    return await promise;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -21,24 +45,27 @@ export async function GET(request: Request) {
   try {
     if (looksLikeIsbn(q)) {
       const isbn = normalizeIsbn(q)!;
-      const [openLibraryExact, openLibrarySearch, google] = await Promise.all([
-        lookupOpenLibraryIsbn(isbn),
-        searchOpenLibrary(`isbn:${isbn}`),
-        searchGoogleBooks(`isbn:${isbn}`),
-      ]);
+      const [openLibraryExact, openLibrarySearch, googleExact, googleLoose] =
+        await Promise.all([
+          settledOne(lookupOpenLibraryIsbn(isbn)),
+          settledList(searchOpenLibrary(`isbn:${isbn}`)),
+          settledList(searchGoogleBooks(`isbn:${isbn}`)),
+          settledList(searchGoogleBooks(isbn)),
+        ]);
 
       const results = mergeCatalogResults([
         openLibraryExact ? [openLibraryExact] : [],
         openLibrarySearch,
-        google,
+        googleExact,
+        googleLoose,
       ]);
 
       return NextResponse.json({ results, query: q, mode: "isbn" });
     }
 
     const [openLibrary, google] = await Promise.all([
-      searchOpenLibrary(q),
-      searchGoogleBooks(q),
+      settledList(searchOpenLibrary(q)),
+      settledList(searchGoogleBooks(q)),
     ]);
 
     const results = mergeCatalogResults([openLibrary, google]);

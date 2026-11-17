@@ -1,3 +1,4 @@
+import { fetchJson } from "@/lib/catalog/fetch-json";
 import { isbn10To13, normalizeIsbn } from "@/lib/isbn";
 import type { CatalogBook } from "@/lib/types";
 
@@ -12,6 +13,21 @@ type OpenLibraryDoc = {
   cover_i?: number;
   first_sentence?: string[] | string;
 };
+
+type OpenLibraryBooksPayload = Record<
+  string,
+  {
+    title?: string;
+    authors?: { name?: string }[];
+    publishers?: { name?: string }[];
+    publish_date?: string;
+    number_of_pages?: number;
+    cover?: { large?: string; medium?: string; small?: string };
+    notes?: string;
+    excerpts?: { text?: string }[];
+    identifiers?: { isbn_10?: string[]; isbn_13?: string[] };
+  }
+>;
 
 function pickIsbns(isbns: string[] | undefined) {
   let isbn: string | null = null;
@@ -42,13 +58,12 @@ export async function searchOpenLibrary(query: string): Promise<CatalogBook[]> {
     "key,title,author_name,isbn,publisher,publish_date,number_of_pages_median,cover_i,first_sentence",
   );
 
-  const response = await fetch(url.toString(), {
-    next: { revalidate: 0 },
+  const data = await fetchJson<{ docs?: OpenLibraryDoc[] }>(url.toString(), {
+    timeoutMs: 10000,
+    revalidate: false,
   });
 
-  if (!response.ok) return [];
-
-  const data = (await response.json()) as { docs?: OpenLibraryDoc[] };
+  if (!data) return [];
 
   return (data.docs ?? [])
     .filter((doc) => Boolean(doc.title))
@@ -73,18 +88,58 @@ export async function searchOpenLibrary(query: string): Promise<CatalogBook[]> {
     });
 }
 
-export async function lookupOpenLibraryIsbn(isbn: string): Promise<CatalogBook | null> {
+async function lookupOpenLibraryBooksApi(
+  isbn: string,
+): Promise<CatalogBook | null> {
+  const url = new URL("https://openlibrary.org/api/books");
+  url.searchParams.set("bibkeys", `ISBN:${isbn}`);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("jscmd", "data");
+
+  const data = await fetchJson<OpenLibraryBooksPayload>(url.toString(), {
+    timeoutMs: 10000,
+    revalidate: false,
+  });
+
+  const entry = data?.[`ISBN:${isbn}`];
+  if (!entry?.title) return null;
+
+  const { isbn: isbn10, isbn13 } = pickIsbns([
+    ...(entry.identifiers?.isbn_10 ?? []),
+    ...(entry.identifiers?.isbn_13 ?? []),
+    isbn,
+  ]);
+
+  return {
+    title: entry.title.trim(),
+    authors: (entry.authors ?? [])
+      .map((author) => author.name?.trim())
+      .filter((name): name is string => Boolean(name)),
+    isbn: isbn10,
+    isbn13,
+    cover_url:
+      entry.cover?.large ||
+      entry.cover?.medium ||
+      entry.cover?.small ||
+      `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`,
+    publisher: entry.publishers?.[0]?.name ?? null,
+    published_date: entry.publish_date ?? null,
+    page_count: entry.number_of_pages ?? null,
+    description: entry.notes || entry.excerpts?.[0]?.text || null,
+    source: "open_library",
+  };
+}
+
+export async function lookupOpenLibraryIsbn(
+  isbn: string,
+): Promise<CatalogBook | null> {
   const normalized = normalizeIsbn(isbn);
   if (!normalized) return null;
 
-  const response = await fetch(
-    `https://openlibrary.org/isbn/${normalized}.json`,
-    { next: { revalidate: 0 } },
-  );
+  const fromBooksApi = await lookupOpenLibraryBooksApi(normalized);
+  if (fromBooksApi) return fromBooksApi;
 
-  if (!response.ok) return null;
-
-  const data = (await response.json()) as {
+  const data = await fetchJson<{
     title?: string;
     publishers?: string[];
     publish_date?: string;
@@ -94,23 +149,20 @@ export async function lookupOpenLibraryIsbn(isbn: string): Promise<CatalogBook |
     isbn_10?: string[];
     isbn_13?: string[];
     authors?: { key: string }[];
-  };
+  }>(`https://openlibrary.org/isbn/${normalized}.json`, {
+    timeoutMs: 10000,
+    revalidate: false,
+  });
 
-  if (!data.title) return null;
+  if (!data?.title) return null;
 
   const authors: string[] = [];
   for (const author of data.authors?.slice(0, 3) ?? []) {
-    try {
-      const authorRes = await fetch(`https://openlibrary.org${author.key}.json`, {
-        next: { revalidate: 3600 },
-      });
-      if (authorRes.ok) {
-        const authorData = (await authorRes.json()) as { name?: string };
-        if (authorData.name) authors.push(authorData.name);
-      }
-    } catch {
-      // author lookup is best effort
-    }
+    const authorData = await fetchJson<{ name?: string }>(
+      `https://openlibrary.org${author.key}.json`,
+      { timeoutMs: 6000, revalidate: 3600 },
+    );
+    if (authorData?.name) authors.push(authorData.name);
   }
 
   const { isbn: isbn10, isbn13 } = pickIsbns([
@@ -122,7 +174,7 @@ export async function lookupOpenLibraryIsbn(isbn: string): Promise<CatalogBook |
   const description =
     typeof data.description === "string"
       ? data.description
-      : data.description?.value ?? null;
+      : (data.description?.value ?? null);
 
   return {
     title: data.title.trim(),

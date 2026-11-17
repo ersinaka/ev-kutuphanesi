@@ -30,7 +30,11 @@ cp .env.example .env.local
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+# Opsiyonel ama Vercel icin onerilir:
+GOOGLE_BOOKS_API_KEY=...
 ```
+
+Google Books anahtari yoksa Vercel IP kotasi dolunca katalog sonucu bos donebilir; Open Library yine denenir. Anahtar: Google Cloud → Books API.
 
 Calistir:
 
