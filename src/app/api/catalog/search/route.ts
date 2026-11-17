@@ -1,4 +1,13 @@
 import { NextResponse } from "next/server";
+import {
+  cacheTtlForKey,
+  getCachedResults,
+  isbnCacheKey,
+  lookupLibraryAsCatalog,
+  queryCacheKey,
+  seedIsbnCaches,
+  setDbCache,
+} from "@/lib/catalog/cache";
 import { searchGoogleBooks } from "@/lib/catalog/google-books";
 import { mergeCatalogResults } from "@/lib/catalog/merge";
 import {
@@ -45,6 +54,29 @@ export async function GET(request: Request) {
   try {
     if (looksLikeIsbn(q)) {
       const isbn = normalizeIsbn(q)!;
+      const key = isbnCacheKey(isbn);
+
+      const cached = await getCachedResults(key, true);
+      if (cached.results) {
+        return NextResponse.json({
+          results: cached.results,
+          query: q,
+          mode: "isbn",
+          cache: cached.cache,
+        });
+      }
+
+      const ownedLocal = await lookupLibraryAsCatalog(isbn);
+      if (ownedLocal.length) {
+        await setDbCache(key, ownedLocal, cacheTtlForKey(key));
+        return NextResponse.json({
+          results: ownedLocal,
+          query: q,
+          mode: "isbn",
+          cache: "library",
+        });
+      }
+
       const [openLibraryExact, openLibrarySearch, googleExact, googleLoose] =
         await Promise.all([
           settledOne(lookupOpenLibraryIsbn(isbn)),
@@ -60,7 +92,28 @@ export async function GET(request: Request) {
         googleLoose,
       ]);
 
-      return NextResponse.json({ results, query: q, mode: "isbn" });
+      if (results.length) {
+        await setDbCache(key, results, cacheTtlForKey(key));
+        seedIsbnCaches(results);
+      }
+
+      return NextResponse.json({
+        results,
+        query: q,
+        mode: "isbn",
+        cache: "miss",
+      });
+    }
+
+    const key = queryCacheKey(q);
+    const cached = await getCachedResults(key, false);
+    if (cached.results) {
+      return NextResponse.json({
+        results: cached.results,
+        query: q,
+        mode: "title",
+        cache: cached.cache,
+      });
     }
 
     const [openLibrary, google] = await Promise.all([
@@ -69,7 +122,17 @@ export async function GET(request: Request) {
     ]);
 
     const results = mergeCatalogResults([openLibrary, google]);
-    return NextResponse.json({ results, query: q, mode: "title" });
+    if (results.length) {
+      await setDbCache(key, results, cacheTtlForKey(key));
+      seedIsbnCaches(results);
+    }
+
+    return NextResponse.json({
+      results,
+      query: q,
+      mode: "title",
+      cache: "miss",
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

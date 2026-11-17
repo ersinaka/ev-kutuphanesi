@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useState, useTransition, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+} from "react";
 import {
   addBook,
   catalogToInsert,
@@ -9,11 +16,18 @@ import {
   markOwned,
   markPossibleDuplicates,
 } from "@/lib/books";
+import {
+  getClientCatalogCache,
+  setClientCatalogCache,
+} from "@/lib/catalog/client-cache";
+import { looksLikeIsbn } from "@/lib/isbn";
 import { findSimilarBooks } from "@/lib/similarity";
-import type { CatalogBook } from "@/lib/types";
+import type { Book, CatalogBook } from "@/lib/types";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { BookCover } from "@/components/BookCover";
 import { BulkIsbnAdd } from "@/components/BulkIsbnAdd";
+
+const DEBOUNCE_MS = 350;
 
 type ManualForm = {
   title: string;
@@ -56,58 +70,126 @@ export function AddBookPanel() {
   const [pending, startTransition] = useTransition();
   const [showManual, setShowManual] = useState(false);
   const [forceManual, setForceManual] = useState(false);
+  const libraryRef = useRef<{ at: number; books: Book[] } | null>(null);
+  const requestIdRef = useRef(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSearchedRef = useRef("");
 
-  const runCatalogSearch = useCallback(async (term: string) => {
-    setError(null);
-    setStatus(null);
-    setSearching(true);
-    setQuery(term);
-
-    try {
-      const response = await fetch(
-        `/api/catalog/search?q=${encodeURIComponent(term.trim())}`,
-      );
-      const data = (await response.json()) as {
-        results?: CatalogBook[];
-        error?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(data.error || "Arama başarısız.");
-      }
-
-      const catalog = data.results ?? [];
-      const [owned, library] = await Promise.all([
-        findOwnedMatches(catalog),
-        listBooks(),
-      ]);
-      const withOwned = markOwned(catalog, owned);
-      const withDupes = markPossibleDuplicates(withOwned, library);
-      setResults(withDupes);
-      setShowManual(withDupes.length === 0);
-      setStatus(
-        withDupes.length
-          ? `${withDupes.length} sonuç bulundu.`
-          : "Sonuç yok. Manuel ekleme formunu kullan.",
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Arama başarısız.");
-      setResults([]);
-      setShowManual(true);
-    } finally {
-      setSearching(false);
+  const getLibrary = useCallback(async () => {
+    const cached = libraryRef.current;
+    if (cached && Date.now() - cached.at < 60_000) {
+      return cached.books;
     }
+    const books = await listBooks();
+    libraryRef.current = { at: Date.now(), books };
+    return books;
   }, []);
+
+  const runCatalogSearch = useCallback(
+    async (term: string, options?: { silent?: boolean }) => {
+      const trimmed = term.trim();
+      if (trimmed.length < 2) return;
+
+      const requestId = ++requestIdRef.current;
+      lastSearchedRef.current = trimmed;
+      setQuery(trimmed);
+      setError(null);
+      if (!options?.silent) setStatus(null);
+      setSearching(true);
+
+      try {
+        const cached = getClientCatalogCache(trimmed);
+        let catalog = cached;
+
+        if (!catalog) {
+          const response = await fetch(
+            `/api/catalog/search?q=${encodeURIComponent(trimmed)}`,
+          );
+          const data = (await response.json()) as {
+            results?: CatalogBook[];
+            error?: string;
+            cache?: string;
+          };
+
+          if (!response.ok) {
+            throw new Error(data.error || "Arama başarısız.");
+          }
+
+          catalog = data.results ?? [];
+          if (catalog.length) {
+            setClientCatalogCache(trimmed, catalog);
+          }
+
+          if (data.cache && data.cache !== "miss") {
+            setStatus(
+              catalog.length
+                ? `${catalog.length} sonuç (önbellek).`
+                : "Sonuç yok. Manuel ekleme formunu kullan.",
+            );
+          }
+        }
+
+        if (requestId !== requestIdRef.current) return;
+
+        const [owned, library] = await Promise.all([
+          findOwnedMatches(catalog),
+          getLibrary(),
+        ]);
+        if (requestId !== requestIdRef.current) return;
+
+        const withOwned = markOwned(catalog, owned);
+        const withDupes = markPossibleDuplicates(withOwned, library);
+        setResults(withDupes);
+        setShowManual(withDupes.length === 0);
+        setStatus((current) =>
+          current?.includes("önbellek")
+            ? current
+            : withDupes.length
+              ? `${withDupes.length} sonuç bulundu.`
+              : "Sonuç yok. Manuel ekleme formunu kullan.",
+        );
+      } catch (err) {
+        if (requestId !== requestIdRef.current) return;
+        setError(err instanceof Error ? err.message : "Arama başarısız.");
+        setResults([]);
+        setShowManual(true);
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setSearching(false);
+        }
+      }
+    },
+    [getLibrary],
+  );
 
   const handleScan = useCallback(
     (isbn: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       void runCatalogSearch(isbn);
     },
     [runCatalogSearch],
   );
 
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const trimmed = query.trim();
+    const ready =
+      trimmed.length >= 3 || (looksLikeIsbn(trimmed) && trimmed.length >= 10);
+    if (!ready || trimmed === lastSearchedRef.current) return;
+
+    debounceRef.current = setTimeout(() => {
+      void runCatalogSearch(trimmed, { silent: true });
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, runCatalogSearch]);
+
   async function runSearch(event: FormEvent) {
     event.preventDefault();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     await runCatalogSearch(query);
   }
 
@@ -245,8 +327,9 @@ export function AddBookPanel() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="ISBN veya kitap adı..."
+          placeholder="ISBN veya kitap adı (yazarken arar)..."
           className="input input-muted"
+          autoComplete="off"
         />
         <button
           type="submit"

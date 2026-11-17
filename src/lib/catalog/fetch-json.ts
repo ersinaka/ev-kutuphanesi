@@ -10,7 +10,7 @@ export async function fetchJson<T>(
   url: string,
   options: FetchJsonOptions = {},
 ): Promise<T | null> {
-  const { timeoutMs = 10000, revalidate = 0 } = options;
+  const { timeoutMs = 8000, revalidate = 0 } = options;
 
   try {
     const response = await fetch(url, {
