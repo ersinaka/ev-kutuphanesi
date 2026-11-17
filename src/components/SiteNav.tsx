@@ -9,29 +9,44 @@ const links = [
   { href: "/", label: "Raflar" },
   { href: "/ekle", label: "Ekle" },
   { href: "/medya", label: "Medya" },
-  { href: "/istatistik", label: "İstatistik" },
-  { href: "/yedek", label: "Yedek" },
 ];
 
-export function SiteNav() {
+function hasSessionCookie() {
+  return document.cookie
+    .split("; ")
+    .some((item) => item.startsWith("sb-") && item.includes("-auth-token="));
+}
+
+export function SiteNav({
+  initialSignedIn = false,
+}: {
+  initialSignedIn?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState(initialSignedIn);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     let active = true;
 
+    // After a server-action login the browser client can have a stale in-memory
+    // session, so also trust the session cookie set by the server.
     void supabase.auth.getUser().then(({ data }) => {
-      if (active) setSignedIn(Boolean(data.user));
+      if (active && (data.user || hasSessionCookie())) setSignedIn(true);
     });
 
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(Boolean(session?.user));
     });
 
     return () => {
-      active = false;
       data.subscription.unsubscribe();
     };
   }, []);

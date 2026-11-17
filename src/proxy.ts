@@ -1,13 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedPaths = [
-  "/",
-  "/ekle",
-  "/medya",
-  "/istatistik",
-  "/yedek",
-  "/kitap",
-];
+const protectedPaths = ["/", "/ekle", "/medya", "/kitap"];
 
 function hasAuthCookie(request: NextRequest) {
   return request.cookies
@@ -34,12 +27,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/",
-    "/ekle/:path*",
-    "/medya/:path*",
-    "/istatistik/:path*",
-    "/yedek/:path*",
-    "/kitap/:path*",
-  ],
+  matcher: ["/", "/ekle/:path*", "/medya/:path*", "/kitap/:path*"],
 };

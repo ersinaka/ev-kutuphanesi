@@ -1,13 +1,14 @@
-import Link from "next/link";
 import { BookCover } from "@/components/BookCover";
+import { ImportExportPanel } from "@/components/ImportExportPanel";
 import { ProfileEditor } from "@/components/ProfileEditor";
-import type { BookComment, Profile, PublicReadBook } from "@/lib/types";
+import type { Book, BookComment, Profile, PublicReadBook } from "@/lib/types";
 
 type ProfileViewProps = {
   profile: Profile;
   readBooks: PublicReadBook[];
   comments: BookComment[];
   isOwn: boolean;
+  backupBooks?: Book[];
 };
 
 function initials(profile: Profile) {
@@ -29,6 +30,7 @@ export function ProfileView({
   readBooks,
   comments,
   isOwn,
+  backupBooks = [],
 }: ProfileViewProps) {
   return (
     <div className="stack-lg">
@@ -54,17 +56,9 @@ export function ProfileView({
         </div>
       </section>
 
-      {isOwn ? (
-        <>
-          <ProfileEditor profile={profile} />
-          <p className="muted-note">
-            Profilini paylaşmak için:{" "}
-            <Link href={`/profil/${profile.username}`} className="text-link">
-              /profil/{profile.username}
-            </Link>
-          </p>
-        </>
-      ) : null}
+      {isOwn ? <ProfileEditor profile={profile} /> : null}
+
+      {isOwn ? <ImportExportPanel books={backupBooks} embedded /> : null}
 
       <section className="stack-md">
         <div className="section-head">

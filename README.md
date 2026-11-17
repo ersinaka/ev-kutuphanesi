@@ -13,7 +13,7 @@ Her kullanıcının kendi rafı, profili ve okuduğu kitaplara yorumları vardı
 - Ödünç takibi, raf haritası, arama/filtre/sıralama
 - Open Library + Google Books katalog araması, barkod tarama, toplu ISBN
 - Benzer başlık-yazar için çift kayıt uyarısı
-- İstatistikler, CSV/JSON yedekleme, PWA
+- CSV/JSON yedekleme (kendi profilinde), PWA
 - Katalog önbelleği: tarayıcı (7 gün) + Supabase (30 gün) + kitap başına kalıcı metadata
 - `/ekle` içinden kitap, film veya dizi seçimi
 - TMDB ile film (`/search/movie`) ve dizi (`/search/tv`) arama, afiş/metadata kaydı

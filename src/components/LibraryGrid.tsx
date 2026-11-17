@@ -12,6 +12,7 @@ import {
 import type { Book, LibrarySort, ReadingStatus } from "@/lib/types";
 import { READING_STATUS_LABELS } from "@/lib/types";
 import { BookCover } from "@/components/BookCover";
+import { Modal } from "@/components/Modal";
 
 type LibraryGridProps = {
   initialBooks: Book[];
@@ -130,6 +131,11 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
       .sort((a, b) => a.shelf.localeCompare(b.shelf, "tr"));
   }, [filtered]);
 
+  const activeBook = useMemo(
+    () => filtered.find((book) => book.id === activeId) ?? null,
+    [filtered, activeId],
+  );
+
   function handleDelete(id: string, title: string) {
     const confirmed = window.confirm(`"${title}" kütüphaneden silinsin mi?`);
     if (!confirmed) return;
@@ -163,9 +169,9 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
     });
   }
 
-  function renderShelfPanel(book: Book) {
+  function renderShelfPanelBody(book: Book) {
     return (
-      <div className="shelf-book-panel" role="dialog" aria-label={book.title}>
+      <div className="shelf-modal-body">
         <div className="shelf-panel-cover">
           <BookCover
             title={book.title}
@@ -174,9 +180,6 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
           />
         </div>
         <div className="stack-sm">
-          <Link href={`/kitap/${book.id}`}>
-            <h2 className="book-title">{book.title}</h2>
-          </Link>
           <p className="book-meta">
             {book.authors.length
               ? book.authors.join(", ")
@@ -211,16 +214,13 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
           ) : null}
 
           <div className="action-row">
-            <Link href={`/kitap/${book.id}`} className="btn btn-primary">
-              Kitap sayfası
-            </Link>
-            <button
-              type="button"
-              className="btn btn-ghost"
+            <Link
+              href={`/kitap/${book.id}`}
+              className="btn btn-primary"
               onClick={() => setActiveId(null)}
             >
-              Kapat
-            </button>
+              Kitap sayfası
+            </Link>
             <button
               type="button"
               disabled={pending}
@@ -273,19 +273,15 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
             <span className="muted-note">{items.length} kitap</span>
           </div>
         ) : null}
-        {rows.map((row, index) => {
-          const activeBook = row.find((book) => book.id === activeId) ?? null;
-          return (
-            <div key={`${label ?? "all"}-${index}`} className="shelf-unit">
-              <div className="shelf-back" aria-hidden />
-              <div className="shelf-row">{row.map(renderShelfBook)}</div>
-              <div className="shelf-board" aria-hidden>
-                <span className="shelf-lip" />
-              </div>
-              {activeBook ? renderShelfPanel(activeBook) : null}
+        {rows.map((row, index) => (
+          <div key={`${label ?? "all"}-${index}`} className="shelf-unit">
+            <div className="shelf-back" aria-hidden />
+            <div className="shelf-row">{row.map(renderShelfBook)}</div>
+            <div className="shelf-board" aria-hidden>
+              <span className="shelf-lip" />
             </div>
-          );
-        })}
+          </div>
+        ))}
       </section>
     );
   }
@@ -461,6 +457,15 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
           ))}
         </div>
       )}
+
+      {activeBook ? (
+        <Modal
+          title={activeBook.title}
+          onClose={() => setActiveId(null)}
+        >
+          {renderShelfPanelBody(activeBook)}
+        </Modal>
+      ) : null}
     </section>
   );
 }

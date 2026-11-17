@@ -13,9 +13,13 @@ import type { Book } from "@/lib/types";
 
 type ImportExportPanelProps = {
   books: Book[];
+  embedded?: boolean;
 };
 
-export function ImportExportPanel({ books }: ImportExportPanelProps) {
+export function ImportExportPanel({
+  books,
+  embedded = false,
+}: ImportExportPanelProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -77,10 +81,14 @@ export function ImportExportPanel({ books }: ImportExportPanelProps) {
   }
 
   return (
-    <section className="stack-lg">
-      <div className="page-copy">
-        <h1 className="page-title">Yedekle / aktar</h1>
-      </div>
+    <section className={embedded ? "stack-md" : "stack-lg"}>
+      {embedded ? (
+        <h2 className="section-title">Yedekle / aktar</h2>
+      ) : (
+        <div className="page-copy">
+          <h1 className="page-title">Yedekle / aktar</h1>
+        </div>
+      )}
 
       <div className="split-panels">
         <section className="panel stack-md">

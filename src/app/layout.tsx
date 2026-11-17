@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Caveat, Nunito } from "next/font/google";
 import { PwaRegister } from "@/components/PwaRegister";
 import { SiteNav } from "@/components/SiteNav";
+import { getCurrentUser } from "@/lib/dal";
 import "./globals.css";
 
 const caveat = Caveat({
@@ -38,7 +39,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
+
   return (
     <html
       lang="tr"
@@ -48,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="app-shell">
           <div className="room-glow" aria-hidden />
           <div className="sketch-doodles" aria-hidden />
-          <SiteNav />
+          <SiteNav initialSignedIn={Boolean(user)} />
           <main className="app-main">{children}</main>
         </div>
         <PwaRegister />

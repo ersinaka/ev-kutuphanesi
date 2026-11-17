@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { MediaPoster } from "@/components/MediaPoster";
+import { Modal } from "@/components/Modal";
 import {
   addMedia,
   getMyMediaKeys,
@@ -47,6 +48,7 @@ export function AddMediaPanel({ type }: { type: MediaType }) {
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,6 +104,7 @@ export function AddMediaPanel({ type }: { type: MediaType }) {
       setError(null);
       setStatus(null);
       setSelected(null);
+      setVisibleCount(8);
       setSearching(true);
 
       try {
@@ -266,9 +269,12 @@ export function AddMediaPanel({ type }: { type: MediaType }) {
 
       {results.length > 0 && (
         <section className="stack-md">
-          <h2 className="section-title">Sonuçlar</h2>
+          <div className="section-head">
+            <h2 className="section-title">Sonuçlar</h2>
+            <span className="muted-note">{results.length} sonuç</span>
+          </div>
           <div className="media-results">
-            {results.map((result) => (
+            {results.slice(0, visibleCount).map((result) => (
               <article key={result.tmdb_id} className="media-result">
                 <MediaPoster
                   title={result.title}
@@ -305,103 +311,120 @@ export function AddMediaPanel({ type }: { type: MediaType }) {
               </article>
             ))}
           </div>
+          {results.length > visibleCount ? (
+            <button
+              type="button"
+              className="btn btn-ghost results-more"
+              onClick={() => setVisibleCount((count) => count + 8)}
+            >
+              Daha fazla göster ({results.length - visibleCount})
+            </button>
+          ) : null}
         </section>
       )}
 
-      {selected && (
-        <section className="panel panel-wood media-detail">
-          <div className="media-detail-head">
-            <MediaPoster
-              title={selected.title}
-              path={selected.poster_path}
-              size="w342"
-              className="media-poster media-poster-detail"
-            />
-            <div className="stack-sm">
-              <h2 className="section-title">{selected.title}</h2>
-              {selected.original_title && (
-                <p className="media-original">{selected.original_title}</p>
-              )}
-              <p className="media-meta">
-                <span>{MEDIA_TYPE_LABELS[selected.type]}</span>
-                <span>{formatDate(selected.release_date)}</span>
-                {selected.vote_average != null && (
-                  <span>TMDB ★ {selected.vote_average.toFixed(1)}</span>
-                )}
-              </p>
-              <p className="media-overview">
-                {selected.overview || "Açıklama bulunmuyor."}
-              </p>
-              <p className="muted-note">TMDB ID: {selected.tmdb_id}</p>
-            </div>
-          </div>
-
-          <div className="field-grid">
-            <label className="field">
-              <span className="field-label">İzleme durumu</span>
-              <select
-                className="input"
-                value={watchStatus}
-                onChange={(event) =>
-                  setWatchStatus(event.target.value as WatchStatus)
-                }
-              >
-                {(Object.keys(WATCH_STATUS_LABELS) as WatchStatus[]).map((key) => (
-                  <option key={key} value={key}>
-                    {WATCH_STATUS_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span className="field-label">Puanın (isteğe bağlı)</span>
-              <div className="media-rating" role="group" aria-label="Puan">
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-label={`${value} yıldız`}
-                    aria-pressed={rating === value}
-                    className={`media-star${rating === value ? " is-active" : ""}`}
-                    onClick={() => setRating(rating === value ? null : value)}
-                  >
-                    ★
-                  </button>
-                ))}
-              </div>
-            </label>
-            <label className="field field-span-2">
-              <span className="field-label">Notun (isteğe bağlı)</span>
-              <textarea
-                className="textarea"
-                value={review}
-                maxLength={2000}
-                onChange={(event) => setReview(event.target.value)}
-                placeholder="Bu yapıt hakkında kısa bir not..."
+      {selected ? (
+        <Modal title={selected.title} onClose={() => setSelected(null)} wide>
+          <div className="stack-md">
+            <div className="media-detail-head">
+              <MediaPoster
+                title={selected.title}
+                path={selected.poster_path}
+                size="w342"
+                className="media-poster media-poster-detail"
               />
-            </label>
-          </div>
+              <div className="stack-sm">
+                {selected.original_title ? (
+                  <p className="media-original">{selected.original_title}</p>
+                ) : null}
+                <p className="media-meta">
+                  <span>{MEDIA_TYPE_LABELS[selected.type]}</span>
+                  <span>{formatDate(selected.release_date)}</span>
+                  {selected.vote_average != null ? (
+                    <span>TMDB ★ {selected.vote_average.toFixed(1)}</span>
+                  ) : null}
+                </p>
+                <p className="muted-note">TMDB ID: {selected.tmdb_id}</p>
+              </div>
+            </div>
 
-          <div className="action-row">
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving}
-              className="btn btn-primary"
-            >
-              {saving ? "Kaydediliyor..." : "Listeme ekle"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              disabled={saving}
-              className="btn btn-ghost"
-            >
-              Vazgeç
-            </button>
+            <div className="field-grid">
+              <label className="field">
+                <span className="field-label">İzleme durumu</span>
+                <select
+                  className="input"
+                  value={watchStatus}
+                  onChange={(event) =>
+                    setWatchStatus(event.target.value as WatchStatus)
+                  }
+                >
+                  {(Object.keys(WATCH_STATUS_LABELS) as WatchStatus[]).map(
+                    (key) => (
+                      <option key={key} value={key}>
+                        {WATCH_STATUS_LABELS[key]}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
+              <label className="field">
+                <span className="field-label">Puanın (isteğe bağlı)</span>
+                <div className="media-rating" role="group" aria-label="Puan">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-label={`${value} yıldız`}
+                      aria-pressed={rating === value}
+                      className={`media-star${
+                        rating === value ? " is-active" : ""
+                      }`}
+                      onClick={() =>
+                        setRating(rating === value ? null : value)
+                      }
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </label>
+              <label className="field field-span-2">
+                <span className="field-label">Notun (isteğe bağlı)</span>
+                <textarea
+                  className="textarea"
+                  value={review}
+                  maxLength={2000}
+                  onChange={(event) => setReview(event.target.value)}
+                  placeholder="Bu yapıt hakkında kısa bir not..."
+                />
+              </label>
+            </div>
+
+            <div className="action-row">
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving}
+                className="btn btn-primary"
+              >
+                {saving ? "Kaydediliyor..." : "Listeme ekle"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                disabled={saving}
+                className="btn btn-ghost"
+              >
+                Vazgeç
+              </button>
+            </div>
+
+            <p className="media-overview">
+              {selected.overview || "Açıklama bulunmuyor."}
+            </p>
           </div>
-        </section>
-      )}
+        </Modal>
+      ) : null}
     </div>
   );
 }
