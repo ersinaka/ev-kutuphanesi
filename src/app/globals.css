@@ -450,6 +450,17 @@ img {
   background: #ffb8ac;
 }
 
+.btn.btn-sm {
+  padding: 5px 11px;
+  border-radius: 999px;
+  box-shadow: 1px 1px 0 var(--ink);
+  font-size: 15px;
+}
+
+.btn.btn-sm:hover:not(:disabled) {
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
 .alert {
   margin: 0;
   padding: 12px 16px;
@@ -1018,10 +1029,22 @@ select.input {
   gap: 24px;
 }
 
+.detail-hero > * {
+  min-width: 0;
+}
+
+.detail-hero .page-title {
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-decoration-thickness: 6px;
+}
+
 @media (min-width: 768px) {
   .detail-hero {
     grid-template-columns: 220px 1fr;
     align-items: start;
+    gap: 32px;
   }
 }
 
@@ -1029,6 +1052,7 @@ select.input {
   display: grid;
   gap: 0;
   justify-items: center;
+  padding: 6px 6px 0;
 }
 
 .detail-cover {
@@ -1039,14 +1063,21 @@ select.input {
   border: var(--ink-border);
   border-radius: 8px 16px 12px 6px / 10px 8px 16px 8px;
   background: var(--background);
-  box-shadow: 5px 6px 0 var(--ink);
-  transform: rotate(-2deg);
+  box-shadow: 4px 5px 0 var(--ink);
+}
+
+.detail-cover > img,
+.detail-cover .book-cover-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .detail-shelf {
-  width: min(260px, 80vw);
+  width: min(220px, 70vw);
   height: 14px;
-  margin-top: 4px;
+  margin-top: 10px;
   border: var(--ink-border);
   border-radius: 4px 8px 10px 6px / 8px 4px 10px 6px;
   background: linear-gradient(180deg, #c49a78, #8a6248);
@@ -1059,14 +1090,40 @@ select.input {
   gap: 8px;
 }
 
+.status-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-inline .status-toggle {
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+
+.inline-note {
+  font-family: var(--font-sketch);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inline-ok {
+  color: #2f6b3c;
+}
+
+.inline-error {
+  color: var(--danger);
+}
+
 .status-btn {
-  padding: 12px 8px;
+  padding: 8px 8px;
   border: var(--ink-border);
   border-radius: var(--radius-lg);
   background: #fffcf4;
   color: var(--muted);
   font-family: var(--font-sketch);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -1130,6 +1187,10 @@ select.input {
   transform: translateY(-2px) rotate(-8deg);
 }
 
+.detail-actions {
+  margin-top: 4px;
+}
+
 .review-quote {
   margin: 0;
   padding: 16px;
@@ -1137,7 +1198,7 @@ select.input {
   border-radius: var(--radius-xl);
   background: #fff3bf;
   box-shadow: var(--shadow);
-  transform: rotate(-0.4deg);
+  overflow-wrap: anywhere;
 }
 
 .review-quote p {
@@ -1146,6 +1207,7 @@ select.input {
   font-size: 22px;
   line-height: 1.25;
   text-wrap: pretty;
+  overflow-wrap: anywhere;
 }
 
 .review-score {

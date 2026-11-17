@@ -8,6 +8,7 @@ import { READING_STATUS_LABELS } from "@/lib/types";
 type ReadingStatusPanelProps = {
   book: Book;
   onUpdated: (book: Book) => void;
+  compact?: boolean;
 };
 
 const STATUSES: ReadingStatus[] = ["unread", "reading", "read"];
@@ -15,6 +16,7 @@ const STATUSES: ReadingStatus[] = ["unread", "reading", "read"];
 export function ReadingStatusPanel({
   book,
   onUpdated,
+  compact = false,
 }: ReadingStatusPanelProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,29 +55,45 @@ export function ReadingStatusPanel({
     });
   }
 
+  const toggle = (
+    <div className="status-toggle" role="group" aria-label="Okuma durumu">
+      {STATUSES.map((status) => (
+        <button
+          key={status}
+          type="button"
+          disabled={pending}
+          aria-pressed={book.reading_status === status}
+          className={`status-btn${book.reading_status === status ? " is-active" : ""}`}
+          onClick={() => setStatus(status)}
+        >
+          {READING_STATUS_LABELS[status]}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (compact) {
+    return (
+      <div className="status-inline">
+        {toggle}
+        {message ? (
+          <span className="inline-note inline-ok">{message}</span>
+        ) : null}
+        {error ? (
+          <span className="inline-note inline-error">{error}</span>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <section className="panel stack-md">
       <h2 className="section-title">Okuma durumu</h2>
       <p className="muted-note">Kitabı okudun mu, okuyor musun, yoksa sırada mı?</p>
-
-      <div className="status-toggle" role="group" aria-label="Okuma durumu">
-        {STATUSES.map((status) => (
-          <button
-            key={status}
-            type="button"
-            disabled={pending}
-            className={`status-btn${book.reading_status === status ? " is-active" : ""}`}
-            onClick={() => setStatus(status)}
-          >
-            {READING_STATUS_LABELS[status]}
-          </button>
-        ))}
-      </div>
-
+      {toggle}
       {book.finished_at && book.reading_status === "read" ? (
         <p className="muted-note">Bitirme: {book.finished_at}</p>
       ) : null}
-
       {message ? <p className="alert alert-ok">{message}</p> : null}
       {error ? <p className="alert alert-error">{error}</p> : null}
     </section>

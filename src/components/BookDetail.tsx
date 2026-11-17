@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteBook, isOverdue } from "@/lib/books";
 import type { Book } from "@/lib/types";
-import { READING_STATUS_LABELS } from "@/lib/types";
 import { BookCover } from "@/components/BookCover";
 import { BookEditForm } from "@/components/BookEditForm";
 import { LoanPanel } from "@/components/LoanPanel";
@@ -20,6 +19,8 @@ export function BookDetail({ initialBook }: BookDetailProps) {
   const router = useRouter();
   const [book, setBook] = useState(initialBook);
   const [pending, startTransition] = useTransition();
+  const [editOpen, setEditOpen] = useState(false);
+  const [loanOpen, setLoanOpen] = useState(false);
 
   function handleDelete() {
     const confirmed = window.confirm(`"${book.title}" silinsin mi?`);
@@ -55,10 +56,9 @@ export function BookDetail({ initialBook }: BookDetailProps) {
             </p>
           </div>
 
+          <ReadingStatusPanel book={book} onUpdated={setBook} compact />
+
           <div className="chip-row">
-            <span className="chip chip-accent">
-              {READING_STATUS_LABELS[book.reading_status]}
-            </span>
             {book.rating ? (
               <span className="chip chip-warn">
                 {"★".repeat(book.rating)}
@@ -125,30 +125,53 @@ export function BookDetail({ initialBook }: BookDetailProps) {
           {book.notes ? (
             <p className="alert alert-ok">Not: {book.notes}</p>
           ) : null}
-          {book.review && book.reading_status === "read" ? (
-            <blockquote className="review-quote">
-              {book.rating ? (
-                <p className="review-score">{"★".repeat(book.rating)}</p>
-              ) : null}
-              <p>{book.review}</p>
-            </blockquote>
-          ) : null}
 
-          <button
-            type="button"
-            disabled={pending}
-            onClick={handleDelete}
-            className="btn btn-danger"
-          >
-            Sil
-          </button>
+          <div className="action-row detail-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              aria-expanded={editOpen}
+              onClick={() => setEditOpen((value) => !value)}
+            >
+              {editOpen ? "Düzenlemeyi kapat" : "Düzenle"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              aria-expanded={loanOpen}
+              onClick={() => setLoanOpen((value) => !value)}
+            >
+              {loanOpen ? "Ödünç takibini kapat" : "Ödünç takibi"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={handleDelete}
+              className="btn btn-danger btn-sm"
+            >
+              Sil
+            </button>
+          </div>
         </div>
       </div>
 
-      <ReadingStatusPanel book={book} onUpdated={setBook} />
+      {editOpen ? (
+        <BookEditForm
+          book={book}
+          onUpdated={setBook}
+          onClose={() => setEditOpen(false)}
+        />
+      ) : null}
+
+      {loanOpen ? (
+        <LoanPanel
+          book={book}
+          onUpdated={setBook}
+          onClose={() => setLoanOpen(false)}
+        />
+      ) : null}
+
       <ReviewPanel book={book} onUpdated={setBook} />
-      <LoanPanel book={book} onUpdated={setBook} />
-      <BookEditForm book={book} onUpdated={setBook} />
     </div>
   );
 }

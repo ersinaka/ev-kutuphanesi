@@ -7,9 +7,10 @@ import type { Book } from "@/lib/types";
 type LoanPanelProps = {
   book: Book;
   onUpdated: (book: Book) => void;
+  onClose?: () => void;
 };
 
-export function LoanPanel({ book, onUpdated }: LoanPanelProps) {
+export function LoanPanel({ book, onUpdated, onClose }: LoanPanelProps) {
   const [loanedTo, setLoanedTo] = useState(book.loaned_to ?? "");
   const [loanedAt, setLoanedAt] = useState(
     book.loaned_at ?? new Date().toISOString().slice(0, 10),
@@ -107,7 +108,12 @@ export function LoanPanel({ book, onUpdated }: LoanPanelProps) {
               onClick={clearLoan}
               className="btn btn-ghost"
             >
-              Geri alındı
+              İade al
+            </button>
+          ) : null}
+          {onClose ? (
+            <button type="button" onClick={onClose} className="btn btn-ghost">
+              Kapat
             </button>
           ) : null}
         </div>

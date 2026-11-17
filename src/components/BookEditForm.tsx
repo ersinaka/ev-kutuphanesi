@@ -8,9 +8,10 @@ import { READING_STATUS_LABELS } from "@/lib/types";
 type BookEditFormProps = {
   book: Book;
   onUpdated: (book: Book) => void;
+  onClose?: () => void;
 };
 
-export function BookEditForm({ book, onUpdated }: BookEditFormProps) {
+export function BookEditForm({ book, onUpdated, onClose }: BookEditFormProps) {
   const [title, setTitle] = useState(book.title);
   const [authors, setAuthors] = useState(book.authors.join(", "));
   const [isbn, setIsbn] = useState(book.isbn ?? "");
@@ -197,13 +198,16 @@ export function BookEditForm({ book, onUpdated }: BookEditFormProps) {
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="btn btn-primary field-span-2"
-      >
-        {pending ? "Kaydediliyor..." : "Değişiklikleri kaydet"}
-      </button>
+      <div className="action-row field-span-2">
+        <button type="submit" disabled={pending} className="btn btn-primary">
+          {pending ? "Kaydediliyor..." : "Değişiklikleri kaydet"}
+        </button>
+        {onClose ? (
+          <button type="button" onClick={onClose} className="btn btn-ghost">
+            Vazgeç
+          </button>
+        ) : null}
+      </div>
 
       {message ? (
         <p className="alert alert-ok field-span-2">{message}</p>
