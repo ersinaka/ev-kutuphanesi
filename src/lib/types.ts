@@ -140,3 +140,82 @@ export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
   reading: "Okunuyor",
   read: "Okundu",
 };
+
+export type ContentType = "book" | "movie" | "tv";
+export type MediaType = Exclude<ContentType, "book">;
+export type WatchStatus = "planned" | "watching" | "watched";
+
+export type MediaSearchResult = {
+  tmdb_id: number;
+  type: MediaType;
+  title: string;
+  original_title: string | null;
+  release_date: string | null;
+  overview: string | null;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  original_language: string | null;
+  vote_average: number | null;
+  genre_ids: number[];
+  adult: boolean;
+  alreadyOwned?: boolean;
+};
+
+export type MediaItem = {
+  id: string;
+  user_id?: string | null;
+  content_type: MediaType;
+  tmdb_id: number;
+  title: string;
+  original_title: string | null;
+  release_date: string | null;
+  overview: string | null;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  original_language: string | null;
+  vote_average: number | null;
+  genre_ids: number[];
+  metadata: Record<string, unknown>;
+  watch_status: WatchStatus;
+  rating: number | null;
+  review: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MediaInsert = {
+  content_type: MediaType;
+  tmdb_id: number;
+  title: string;
+  original_title?: string | null;
+  release_date?: string | null;
+  overview?: string | null;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  original_language?: string | null;
+  vote_average?: number | null;
+  genre_ids?: number[];
+  metadata?: Record<string, unknown>;
+  watch_status?: WatchStatus;
+  rating?: number | null;
+  review?: string | null;
+};
+
+export type MediaUpdate = Partial<MediaInsert>;
+
+export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
+  book: "Kitap",
+  movie: "Film",
+  tv: "Dizi",
+};
+
+export const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
+  movie: "Film",
+  tv: "Dizi",
+};
+
+export const WATCH_STATUS_LABELS: Record<WatchStatus, string> = {
+  planned: "İzlenecek",
+  watching: "İzleniyor",
+  watched: "İzledim",
+};

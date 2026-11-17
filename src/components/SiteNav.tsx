@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 const links = [
   { href: "/", label: "Raflar" },
   { href: "/ekle", label: "Ekle" },
+  { href: "/medya", label: "Medya" },
   { href: "/istatistik", label: "İstatistik" },
   { href: "/yedek", label: "Yedek" },
 ];

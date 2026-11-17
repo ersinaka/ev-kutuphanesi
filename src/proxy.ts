@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const protectedPaths = [
   "/",
   "/ekle",
+  "/medya",
   "/istatistik",
   "/yedek",
   "/kitap",
@@ -36,6 +37,7 @@ export const config = {
   matcher: [
     "/",
     "/ekle/:path*",
+    "/medya/:path*",
     "/istatistik/:path*",
     "/yedek/:path*",
     "/kitap/:path*",

@@ -6,6 +6,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import type {
   Book,
   BookComment,
+  MediaItem,
   Profile,
   PublicReadBook,
 } from "@/lib/types";
@@ -50,6 +51,18 @@ export async function listMyBooks(): Promise<Book[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Book[];
+}
+
+export async function listMyMedia(): Promise<MediaItem[]> {
+  const user = await requireUser();
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("media_items")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MediaItem[];
 }
 
 export async function getMyBook(id: string): Promise<Book | null> {
