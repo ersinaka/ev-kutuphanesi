@@ -1,25 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f2f3f5;
-  --foreground: #141414;
-  --surface: #ffffff;
-  --muted: #5c5f66;
-  --line: #d8dce3;
-  --accent: #0b5f4b;
-  --accent-soft: #e4f3ee;
+  --background: #d9e0da;
+  --foreground: #1a1f1c;
+  --surface: #f3f6f3;
+  --muted: #5b655e;
+  --line: #b7c2ba;
+  --accent: #1f4d3a;
+  --accent-soft: #d7e8df;
   --warn: #8a4b12;
-  --warn-soft: #fff1e0;
+  --warn-soft: #f6ead8;
   --danger: #9b1c1c;
   --danger-soft: #fdecec;
-  --shadow: 0 8px 30px rgba(20, 20, 20, 0.05);
+  --wood: #4a3b31;
+  --wood-mid: #6a5546;
+  --wood-light: #8a7260;
+  --shelf-back: #c5cec7;
+  --shadow: 0 12px 40px rgba(26, 31, 28, 0.08);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font-sans: var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-manrope), sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @theme inline {
@@ -33,8 +37,8 @@
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 * {
@@ -61,7 +65,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -75,11 +80,30 @@ img {
 }
 
 .app-shell {
+  position: relative;
   min-height: 100%;
-  background: var(--background);
+  overflow: clip;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.55), transparent 42%),
+    radial-gradient(circle at 88% 8%, rgba(31, 77, 58, 0.12), transparent 36%),
+    linear-gradient(180deg, #e4ebe5 0%, var(--background) 48%, #cfd8d2 100%);
+}
+
+.room-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(26, 31, 28, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 31, 28, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, black, transparent 88%);
+  opacity: 0.5;
 }
 
 .app-main {
+  position: relative;
+  z-index: 1;
   width: min(1152px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 32px 0 64px;
@@ -100,9 +124,9 @@ img {
   width: min(1152px, 100%);
   margin: 0 auto;
   padding: 12px 16px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--wood) 18%, var(--line));
   border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
 }
@@ -115,15 +139,28 @@ img {
 
 .brand-mark {
   display: inline-flex;
-  width: 36px;
-  height: 36px;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  gap: 3px;
+  width: 40px;
+  height: 36px;
+  padding: 6px 7px 5px;
   border-radius: var(--radius-md);
-  background: var(--accent);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  background: var(--wood);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.brand-spine {
+  display: block;
+  width: 6px;
+  height: 18px;
+  border-radius: 2px 2px 0 0;
+  background: #d7e8df;
+}
+
+.brand-spine-mid {
+  height: 22px;
+  background: #f3ebe3;
 }
 
 .brand-name {
@@ -151,7 +188,7 @@ img {
 }
 
 .nav-link:hover {
-  background: var(--background);
+  background: color-mix(in srgb, var(--accent-soft) 70%, white);
   color: var(--foreground);
 }
 
@@ -164,7 +201,7 @@ img {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 @media (min-width: 640px) {
@@ -205,12 +242,13 @@ img {
   display: inline-flex;
   align-items: center;
   padding: 12px 16px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--wood) 22%, var(--line));
   border-radius: var(--radius-xl);
   background: var(--surface);
   color: var(--muted);
   font-size: 14px;
   white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .stat-chip strong {
@@ -247,7 +285,7 @@ img {
 }
 
 .input-muted {
-  background: var(--background);
+  background: color-mix(in srgb, var(--surface) 70%, white);
 }
 
 .textarea {
@@ -255,13 +293,19 @@ img {
   min-height: 96px;
 }
 
-.panel {
+.panel,
+.panel-wood {
   display: grid;
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--surface);
+}
+
+.panel-wood {
+  border-color: color-mix(in srgb, var(--wood) 20%, var(--line));
+  box-shadow: var(--shadow);
 }
 
 .panel-search {
@@ -311,6 +355,10 @@ img {
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn-primary {
@@ -364,9 +412,11 @@ img {
 
 .empty-state {
   padding: 64px 24px;
-  border: 1px dashed var(--line);
+  border: 1px dashed color-mix(in srgb, var(--wood) 35%, var(--line));
   border-radius: 24px;
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, transparent 0 78%, var(--wood) 78% 100%),
+    var(--surface);
   text-align: center;
 }
 
@@ -387,33 +437,157 @@ img {
   text-wrap: pretty;
 }
 
-.book-grid {
+.shelf-bay {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
-@media (min-width: 640px) {
-  .book-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.shelf-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
 }
 
-@media (min-width: 1280px) {
-  .book-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.shelf-unit {
+  position: relative;
+  padding: 24px 16px 0;
+  border: 1px solid color-mix(in srgb, var(--wood) 28%, transparent);
+  border-radius: 16px 16px 12px 12px;
+  background: color-mix(in srgb, var(--shelf-back) 82%, #9eaea3);
+  box-shadow:
+    inset 0 18px 40px rgba(26, 31, 28, 0.08),
+    0 10px 28px rgba(26, 31, 28, 0.08);
+  overflow: visible;
 }
 
-.book-card {
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: var(--surface);
+.shelf-back {
+  position: absolute;
+  inset: 12px 12px 28px;
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0 2px,
+      transparent 2px 18px
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 55%);
+  pointer-events: none;
+}
+
+.shelf-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  min-height: 180px;
+  padding: 0 8px 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.shelf-book {
+  position: relative;
+  flex: 0 0 auto;
+  width: 96px;
+}
+
+.shelf-book-face {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transform-origin: 50% 100%;
   transition: transform 500ms var(--ease);
 }
 
-.book-card:hover {
-  transform: translateY(-4px);
+.shelf-book-face:hover,
+.shelf-book.is-open .shelf-book-face {
+  transform: translateY(-10px) rotate(-1.5deg);
+}
+
+.shelf-book-cover {
+  display: block;
+  width: 96px;
+  height: 144px;
+  overflow: hidden;
+  border-radius: 3px 6px 6px 3px;
+  background: var(--wood-mid);
+  box-shadow:
+    inset -6px 0 10px rgba(0, 0, 0, 0.18),
+    inset 2px 0 0 rgba(255, 255, 255, 0.18),
+    4px 8px 16px rgba(26, 31, 28, 0.22);
+}
+
+.shelf-book-cover img,
+.shelf-book-cover .book-cover-fallback,
+.shelf-book-cover .book-spine-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shelf-book-shadow {
+  display: block;
+  height: 8px;
+  margin: 4px 8px 0;
+  border-radius: 999px;
+  background: rgba(26, 31, 28, 0.2);
+  filter: blur(3px);
+  opacity: 0.7;
+  transition: opacity 300ms var(--ease);
+}
+
+.shelf-book-face:hover .shelf-book-shadow,
+.shelf-book.is-open .shelf-book-shadow {
+  opacity: 0.25;
+}
+
+.shelf-book-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  z-index: 5;
+  width: min(260px, 72vw);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+}
+
+.shelf-board {
+  position: relative;
+  z-index: 2;
+  height: 22px;
+  margin: 0 -1px -1px;
+  border-radius: 0 0 10px 10px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0 3px,
+      transparent 3px 14px
+    ),
+    linear-gradient(180deg, var(--wood-light), var(--wood));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 8px 16px rgba(26, 31, 28, 0.18);
+}
+
+.shelf-lip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -4px;
+  height: 6px;
+  background: linear-gradient(180deg, var(--wood-mid), var(--wood));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
 }
 
 .book-cover {
@@ -423,22 +597,32 @@ img {
 }
 
 .book-cover img,
-.book-cover-fallback {
+.book-cover-fallback,
+.book-spine-fallback {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.book-cover-fallback {
+.book-cover-fallback,
+.book-spine-fallback {
   display: flex;
   align-items: flex-end;
   padding: 12px;
-  background: var(--accent);
-  color: #fff;
   text-align: left;
 }
 
-.book-cover-fallback span {
+.book-spine-fallback {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  text-align: center;
+}
+
+.book-cover-fallback span,
+.book-spine-fallback span {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -449,10 +633,11 @@ img {
   text-wrap: balance;
 }
 
-.book-body {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
+.book-spine-fallback span {
+  -webkit-line-clamp: 1;
+  max-height: 100%;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
 .book-title {
@@ -481,7 +666,7 @@ img {
   align-items: center;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  background: var(--background);
+  background: color-mix(in srgb, var(--background) 70%, white);
   color: var(--muted);
   font-size: 12px;
 }
@@ -498,11 +683,6 @@ img {
 .chip-warn {
   background: var(--warn-soft);
   color: var(--warn);
-}
-
-.section {
-  display: grid;
-  gap: 24px;
 }
 
 .section-head {
@@ -544,6 +724,9 @@ img {
   overflow: hidden;
   border-radius: var(--radius-xl);
   background: var(--background);
+  box-shadow:
+    inset -6px 0 10px rgba(0, 0, 0, 0.08),
+    4px 8px 16px rgba(26, 31, 28, 0.12);
 }
 
 .clamp-2,
@@ -717,11 +900,27 @@ select.input {
 }
 
 .detail-cover {
+  position: relative;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 8px 12px 12px 8px;
   background: var(--background);
   border: 1px solid var(--line);
+  box-shadow:
+    inset -8px 0 14px rgba(0, 0, 0, 0.12),
+    8px 16px 28px rgba(26, 31, 28, 0.16);
+}
+
+.detail-cover::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -14px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(26, 31, 28, 0.18);
+  filter: blur(4px);
 }
 
 .detail-description {
@@ -810,7 +1009,7 @@ select.input {
 .bar-track {
   height: 8px;
   border-radius: 999px;
-  background: var(--background);
+  background: color-mix(in srgb, var(--background) 80%, white);
   overflow: hidden;
 }
 
@@ -818,11 +1017,6 @@ select.input {
   height: 100%;
   border-radius: inherit;
   background: var(--accent);
-}
-
-.shelf-block {
-  display: grid;
-  gap: 16px;
 }
 
 .file-button {
@@ -841,6 +1035,24 @@ select.input {
   .nav-link {
     white-space: nowrap;
   }
+
+  .shelf-book {
+    width: 84px;
+  }
+
+  .shelf-book-cover {
+    width: 84px;
+    height: 126px;
+  }
+
+  .shelf-book-panel {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -853,7 +1065,8 @@ select.input {
     scroll-behavior: auto !important;
   }
 
-  .book-card:hover {
+  .shelf-book-face:hover,
+  .shelf-book.is-open .shelf-book-face {
     transform: none;
   }
 }

@@ -17,7 +17,7 @@ type LibraryGridProps = {
   initialBooks: Book[];
 };
 
-type ViewMode = "grid" | "shelves";
+type ViewMode = "shelves" | "cabinets";
 
 function sortBooks(books: Book[], sort: LibrarySort) {
   const copy = [...books];
@@ -44,6 +44,14 @@ function sortBooks(books: Book[], sort: LibrarySort) {
   }
 }
 
+function chunkBooks(books: Book[], size: number) {
+  const rows: Book[][] = [];
+  for (let i = 0; i < books.length; i += size) {
+    rows.push(books.slice(i, i + size));
+  }
+  return rows;
+}
+
 export function LibraryGrid({ initialBooks }: LibraryGridProps) {
   const [books, setBooks] = useState(initialBooks);
   const [query, setQuery] = useState("");
@@ -55,7 +63,8 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
   );
   const [loaned, setLoaned] = useState<"all" | "yes" | "no">("all");
   const [sort, setSort] = useState<LibrarySort>("newest");
-  const [view, setView] = useState<ViewMode>("grid");
+  const [view, setView] = useState<ViewMode>("shelves");
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -129,6 +138,7 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
       try {
         await deleteBook(id);
         setBooks((current) => current.filter((book) => book.id !== id));
+        setActiveId(null);
         setMessage("Kitap silindi.");
       } catch {
         setMessage("Silme işlemi başarısız oldu.");
@@ -153,66 +163,103 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
     });
   }
 
-  function renderCard(book: Book) {
+  function renderShelfBook(book: Book) {
+    const open = activeId === book.id;
+
     return (
-      <article key={book.id} className="book-card">
-        <Link href={`/kitap/${book.id}`} className="book-cover">
-          <BookCover title={book.title} coverUrl={book.cover_url} />
-        </Link>
-        <div className="book-body">
-          <div className="stack-sm">
-            <Link href={`/kitap/${book.id}`}>
-              <h2 className="book-title">{book.title}</h2>
-            </Link>
-            <p className="book-meta">
-              {book.authors.length
-                ? book.authors.join(", ")
-                : "Yazar bilinmiyor"}
-            </p>
-          </div>
+      <article
+        key={book.id}
+        className={`shelf-book${open ? " is-open" : ""}`}
+      >
+        <button
+          type="button"
+          className="shelf-book-face"
+          aria-expanded={open}
+          aria-label={book.title}
+          onClick={() => setActiveId(open ? null : book.id)}
+        >
+          <span className="shelf-book-cover">
+            <BookCover
+              title={book.title}
+              coverUrl={book.cover_url}
+              variant={book.cover_url ? "cover" : "spine"}
+            />
+          </span>
+          <span className="shelf-book-shadow" aria-hidden />
+        </button>
 
-          <div className="chip-row">
-            <button
-              type="button"
-              className="chip chip-accent chip-button"
-              disabled={pending}
-              onClick={() => cycleStatus(book)}
-            >
-              {READING_STATUS_LABELS[book.reading_status]}
-            </button>
-            {book.isbn13 || book.isbn ? (
-              <span className="chip chip-mono">
-                {book.isbn13 || book.isbn}
-              </span>
-            ) : null}
-            {book.location ? (
-              <span className="chip chip-accent">{book.location}</span>
-            ) : null}
-            {book.loaned_to ? (
-              <span className={`chip ${isOverdue(book) ? "chip-warn" : ""}`}>
-                {isOverdue(book) ? "Gecikmiş · " : "Ödünç · "}
-                {book.loaned_to}
-              </span>
-            ) : null}
-          </div>
+        {open ? (
+          <div className="shelf-book-panel">
+            <div className="stack-sm">
+              <Link href={`/kitap/${book.id}`}>
+                <h2 className="book-title">{book.title}</h2>
+              </Link>
+              <p className="book-meta">
+                {book.authors.length
+                  ? book.authors.join(", ")
+                  : "Yazar bilinmiyor"}
+              </p>
+            </div>
 
-          {book.notes ? <p className="clamp-2">{book.notes}</p> : null}
+            <div className="chip-row">
+              <button
+                type="button"
+                className="chip chip-accent chip-button"
+                disabled={pending}
+                onClick={() => cycleStatus(book)}
+              >
+                {READING_STATUS_LABELS[book.reading_status]}
+              </button>
+              {book.location ? (
+                <span className="chip chip-accent">{book.location}</span>
+              ) : null}
+              {book.loaned_to ? (
+                <span className={`chip ${isOverdue(book) ? "chip-warn" : ""}`}>
+                  {isOverdue(book) ? "Gecikmiş · " : "Ödünç · "}
+                  {book.loaned_to}
+                </span>
+              ) : null}
+            </div>
 
-          <div className="action-row">
-            <Link href={`/kitap/${book.id}`} className="btn btn-ghost">
-              Detay
-            </Link>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => handleDelete(book.id, book.title)}
-              className="btn btn-danger"
-            >
-              Sil
-            </button>
+            <div className="action-row">
+              <Link href={`/kitap/${book.id}`} className="btn btn-ghost">
+                Detay
+              </Link>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => handleDelete(book.id, book.title)}
+                className="btn btn-danger"
+              >
+                Sil
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </article>
+    );
+  }
+
+  function renderShelfBay(label: string | null, items: Book[]) {
+    const rows = chunkBooks(items, 8);
+    return (
+      <section className="shelf-bay">
+        {label ? (
+          <div className="shelf-label">
+            <h2 className="section-title">{label}</h2>
+            <span className="muted-note">{items.length} kitap</span>
+          </div>
+        ) : null}
+        {rows.map((row, index) => (
+          <div key={`${label ?? "all"}-${index}`} className="shelf-unit">
+            <div className="shelf-back" aria-hidden />
+            <div className="shelf-row">{row.map(renderShelfBook)}</div>
+            <div className="shelf-board" aria-hidden>
+              <span className="shelf-lip" />
+            </div>
+          </div>
+        ))}
+      </section>
     );
   }
 
@@ -220,13 +267,14 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
     <section className="stack-lg">
       <div className="page-hero">
         <div className="page-copy">
+          <p className="eyebrow">Ev rafı</p>
           <h1 className="page-title">
-            Evdeki kitaplar
+            Kitaplar
             <br />
-            tek bakışta
+            rafta dizili
           </h1>
           <p className="page-lead">
-            Filtrele, sırala, rafta gör. Aynı kitabı tekrar alma.
+            Kapaklara dokun, durumu değiştir, aynı kitabı tekrar alma.
           </p>
         </div>
 
@@ -235,9 +283,9 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
         </div>
       </div>
 
-      <div className="toolbar">
+      <div className="toolbar panel-wood">
         <label className="field toolbar-search">
-          <span className="field-label">Kütüphanede ara</span>
+          <span className="field-label">Rafta ara</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -349,17 +397,17 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
         <div className="view-toggle">
           <button
             type="button"
-            className={`btn btn-ghost${view === "grid" ? " is-active" : ""}`}
-            onClick={() => setView("grid")}
-          >
-            Izgara
-          </button>
-          <button
-            type="button"
             className={`btn btn-ghost${view === "shelves" ? " is-active" : ""}`}
             onClick={() => setView("shelves")}
           >
-            Raf haritası
+            Tek raf
+          </button>
+          <button
+            type="button"
+            className={`btn btn-ghost${view === "cabinets" ? " is-active" : ""}`}
+            onClick={() => setView("cabinets")}
+          >
+            Oda oda
           </button>
         </div>
       </div>
@@ -370,7 +418,7 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
         <div className="empty-state">
           <h2>
             {books.length === 0
-              ? "Henüz kitap yok"
+              ? "Raf boş"
               : "Bu filtreye uygun kitap yok"}
           </h2>
           <p>
@@ -379,18 +427,14 @@ export function LibraryGrid({ initialBooks }: LibraryGridProps) {
               : "Filtreleri temizle veya farklı bir kelime dene."}
           </p>
         </div>
-      ) : view === "grid" ? (
-        <div className="book-grid">{filtered.map(renderCard)}</div>
+      ) : view === "shelves" ? (
+        renderShelfBay(null, filtered)
       ) : (
         <div className="stack-lg">
           {shelfGroups.map((group) => (
-            <section key={group.shelf} className="shelf-block">
-              <div className="section-head">
-                <h2 className="section-title">{group.shelf}</h2>
-                <span className="muted-note">{group.items.length} kitap</span>
-              </div>
-              <div className="book-grid">{group.items.map(renderCard)}</div>
-            </section>
+            <div key={group.shelf}>
+              {renderShelfBay(group.shelf, group.items)}
+            </div>
           ))}
         </div>
       )}

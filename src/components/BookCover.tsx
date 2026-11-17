@@ -1,10 +1,18 @@
+import { coverTone } from "@/lib/cover-tone";
+
 type BookCoverProps = {
   title: string;
   coverUrl?: string | null;
   className?: string;
+  variant?: "cover" | "spine";
 };
 
-export function BookCover({ title, coverUrl, className = "" }: BookCoverProps) {
+export function BookCover({
+  title,
+  coverUrl,
+  className = "",
+  variant = "cover",
+}: BookCoverProps) {
   if (coverUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -17,8 +25,24 @@ export function BookCover({ title, coverUrl, className = "" }: BookCoverProps) {
     );
   }
 
+  const tone = coverTone(title);
+
+  if (variant === "spine") {
+    return (
+      <div
+        className={`book-spine-fallback ${className}`.trim()}
+        style={{ background: tone.bg, color: tone.fg }}
+      >
+        <span>{title}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className={`book-cover-fallback ${className}`.trim()}>
+    <div
+      className={`book-cover-fallback ${className}`.trim()}
+      style={{ background: tone.bg, color: tone.fg }}
+    >
       <span>{title}</span>
     </div>
   );
